@@ -1,0 +1,1375 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>GitHub Update Tracker</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Marked JS for rendering release markdown -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+        
+        body {
+            font-family: 'Vazirmatn', sans-serif;
+            background-color: #0d1117;
+            color: #c9d1d9;
+        }
+        
+        .font-mono {
+            font-family: 'JetBrains+Mono', monospace;
+        }
+
+        .dir-ltr {
+            direction: ltr;
+        }
+
+        .dir-rtl {
+            direction: rtl;
+        }
+
+        .glass-card {
+            background: rgba(22, 27, 34, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid #30363d;
+        }
+
+        .glass-card:hover {
+            border-color: #8b949e;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0d1117;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #30363d;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #484f58;
+        }
+
+        .markdown-body h1, .markdown-body h2, .markdown-body h3 {
+            color: #f0f6fc;
+            font-weight: 600;
+            margin-top: 1rem;
+            margin-bottom: 0.5rem;
+        }
+        .markdown-body ul {
+            list-style-type: disc;
+            padding-right: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .markdown-body code {
+            background: #161b22;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-family: 'JetBrains+Mono', monospace;
+            font-size: 0.85em;
+        }
+        .markdown-body a {
+            color: #58a6ff;
+        }
+    </style>
+</head>
+<body id="pageBody" class="min-h-screen flex flex-col justify-between dir-rtl relative">
+
+    <!-- منوی شناور تغییر زبان در گوشه پیج -->
+    <div class="fixed top-2 left-2 sm:top-4 sm:left-4 z-50">
+        <div class="relative">
+            <!-- دکمه اصلی انتخاب زبان -->
+            <button id="langDropdownBtn" onclick="toggleLangDropdown()" class="flex items-center gap-1.5 bg-[#161b22]/90 backdrop-blur-xl border border-purple-500/40 hover:border-purple-400 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl text-purple-200 shadow-xl shadow-purple-950/30 transition-all duration-300 group">
+                <div class="p-1 bg-purple-500/20 rounded-lg group-hover:scale-110 transition-transform flex items-center justify-center">
+                    <i data-lucide="globe" class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-purple-400"></i>
+                </div>
+                <span id="currentLangLabel" class="text-xs font-bold tracking-wide flex items-center gap-1.5">
+                    <img src="https://flagcdn.com/w20/ir.png" class="w-3.5 h-2.5 object-cover rounded shadow-sm" alt="IR"> پارسی
+                </span>
+                <i data-lucide="chevron-down" id="langChevron" class="w-3 h-3 sm:w-3.5 sm:h-3.5 text-purple-400 transition-transform duration-300"></i>
+            </button>
+
+            <!-- نوار بازشونده زبان‌ها -->
+            <div id="langDropdownMenu" class="hidden absolute left-0 mt-2 min-w-[120px] w-max bg-[#161b22]/95 backdrop-blur-2xl border border-[#30363d] rounded-xl shadow-2xl overflow-hidden transition-all duration-200 divide-y divide-[#30363d]/50 dir-ltr text-left">
+                <div class="py-1">
+                    <button onclick="selectCustomLang('fa')" class="w-full flex items-center px-3 py-1.5 text-xs text-gray-200 hover:bg-purple-500/20 hover:text-purple-300 transition-all">
+                        <div class="flex items-center gap-2">
+                            <img src="https://flagcdn.com/w20/ir.png" class="w-3.5 h-2.5 object-cover rounded shadow-sm" alt="IR">
+                            <span class="font-medium">پارسی</span>
+                        </div>
+                    </button>
+
+                    <button onclick="selectCustomLang('en')" class="w-full flex items-center px-3 py-1.5 text-xs text-gray-200 hover:bg-purple-500/20 hover:text-purple-300 transition-all">
+                        <div class="flex items-center gap-2">
+                            <img src="https://flagcdn.com/w20/gb.png" class="w-3.5 h-2.5 object-cover rounded shadow-sm" alt="UK">
+                            <span class="font-medium">English</span>
+                        </div>
+                    </button>
+
+                    <button onclick="selectCustomLang('de')" class="w-full flex items-center px-3 py-1.5 text-xs text-gray-200 hover:bg-purple-500/20 hover:text-purple-300 transition-all">
+                        <div class="flex items-center gap-2">
+                            <img src="https://flagcdn.com/w20/de.png" class="w-3.5 h-2.5 object-cover rounded shadow-sm" alt="DE">
+                            <span class="font-medium">Deutsch</span>
+                        </div>
+                    </button>
+
+                    <button onclick="selectCustomLang('ru')" class="w-full flex items-center px-3 py-1.5 text-xs text-gray-200 hover:bg-purple-500/20 hover:text-purple-300 transition-all">
+                        <div class="flex items-center gap-2">
+                            <img src="https://flagcdn.com/w20/ru.png" class="w-3.5 h-2.5 object-cover rounded shadow-sm" alt="RU">
+                            <span class="font-medium">Русский</span>
+                        </div>
+                    </button>
+
+                    <button onclick="selectCustomLang('zh')" class="w-full flex items-center px-3 py-1.5 text-xs text-gray-200 hover:bg-purple-500/20 hover:text-purple-300 transition-all">
+                        <div class="flex items-center gap-2">
+                            <img src="https://flagcdn.com/w20/cn.png" class="w-3.5 h-2.5 object-cover rounded shadow-sm" alt="CN">
+                            <span class="font-medium">中文</span>
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed top-5 left-5 z-50 transform -translate-y-20 opacity-0 transition-all duration-300 flex items-center gap-3 px-4 py-3 rounded-xl border shadow-xl text-sm font-medium"></div>
+
+    <!-- Main Container -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+        
+        <!-- Header -->
+        <header class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-[#30363d] mb-8">
+            <div class="flex items-center gap-3">
+                <div class="p-2.5 bg-[#161b22] border border-[#30363d] rounded-2xl shadow-md flex items-center justify-center">
+                    <i data-lucide="github" class="w-7 h-7 text-white"></i>
+                </div>
+                <h1 class="text-2xl font-bold text-white tracking-wide font-mono flex items-center gap-2">
+                    GitHub Update Tracker
+                </h1>
+            </div>
+
+            <!-- Global Action Bar -->
+            <div class="flex items-center gap-3 flex-wrap">
+                <!-- دکمه ارسال پیام -->
+                <button onclick="openMessageModal()" class="flex items-center gap-2 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 px-4 py-2.5 rounded-xl border border-indigo-500/30 transition-all text-sm font-medium shadow-sm">
+                    <i data-lucide="mail" class="w-4 h-4 text-indigo-400"></i>
+                    <span data-i18n="messageBtn">ارسال پیام</span>
+                </button>
+
+                <!-- دکمه درخواست افزودن ریپو -->
+                <button onclick="openRequestModal()" class="flex items-center gap-2 bg-gradient-to-r from-emerald-600/80 to-teal-600/80 hover:from-emerald-500 hover:to-teal-500 text-white px-4 py-2.5 rounded-xl transition-all text-sm font-medium shadow-md shadow-emerald-600/20 border border-emerald-500/35">
+                    <i data-lucide="git-pull-request" class="w-4 h-4"></i>
+                    <span data-i18n="requestBtn">درخواست افزودن ریپو</span>
+                </button>
+
+                <!-- دکمه تنظیمات مدیریت -->
+                <button onclick="openAdminModal()" id="adminAuthBtn" class="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white px-4 py-2.5 rounded-xl transition-all text-sm font-medium shadow-md shadow-blue-600/20 relative">
+                    <i data-lucide="shield" class="w-4 h-4"></i>
+                    <span id="adminBtnText" data-i18n="adminBtn">تنظیمات مدیریت</span>
+                    <span id="totalBadge" class="hidden absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">0</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Admin Control Panel -->
+        <div id="adminPanel" class="hidden mb-8 bg-gradient-to-r from-blue-900/20 to-indigo-900/20 border border-blue-500/30 rounded-2xl p-6 transition-all space-y-5">
+            <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-4 border-b border-blue-500/20">
+                <div class="flex items-center gap-2 text-blue-400">
+                    <i data-lucide="shield-check" class="w-5 h-5"></i>
+                    <h2 class="font-bold text-white text-base" data-i18n="adminPanelTitle">پنل مدیریت اختصاصی</h2>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="openDbGuideModal()" class="text-xs bg-blue-500/10 hover:bg-blue-500/20 text-blue-300 border border-blue-500/30 px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5">
+                        <i data-lucide="database" class="w-3.5 h-3.5"></i>
+                        <span data-i18n="dbGuideBtn">راهنمای دیتابیس کلادفلر</span>
+                    </button>
+                    <button onclick="logoutAdmin()" class="text-xs text-red-400 hover:text-red-300 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 px-3 py-1.5 rounded-lg transition-all" data-i18n="logoutBtn">
+                        خروج از ادمین
+                    </button>
+                </div>
+            </div>
+
+            <!-- بخش مدیریت پیام‌ها -->
+            <div id="adminMessagesSection" class="hidden bg-[#0d1117] p-4 rounded-xl border border-indigo-500/30 space-y-3">
+                <h3 class="text-sm font-bold text-indigo-400 flex items-center justify-between">
+                    <span class="flex items-center gap-2">
+                        <i data-lucide="inbox" class="w-4 h-4"></i>
+                        <span data-i18n="messagesListTitle">پیام‌ها و بازخوردهای دریافتی</span>
+                    </span>
+                    <span id="msgCountBadge" class="bg-indigo-500/20 text-indigo-300 text-xs px-2 py-0.5 rounded-full border border-indigo-500/30 font-mono">0</span>
+                </h3>
+                <div id="adminMessagesList" class="space-y-2 max-h-48 overflow-y-auto">
+                    <!-- Dynamic Messages -->
+                </div>
+            </div>
+
+            <!-- بخش مدیریت درخواست‌های ریپو -->
+            <div id="adminRequestsSection" class="hidden bg-[#0d1117] p-4 rounded-xl border border-yellow-500/30 space-y-3">
+                <h3 class="text-sm font-bold text-yellow-400 flex items-center justify-between">
+                    <span class="flex items-center gap-2">
+                        <i data-lucide="bell" class="w-4 h-4"></i>
+                        <span data-i18n="requestsListTitle">درخواست‌های جدید افزودن ریپو</span>
+                    </span>
+                    <span id="reqCountBadge" class="bg-yellow-500/20 text-yellow-300 text-xs px-2 py-0.5 rounded-full border border-yellow-500/30 font-mono">0</span>
+                </h3>
+                <div id="adminRequestsList" class="space-y-2 max-h-48 overflow-y-auto">
+                    <!-- Dynamic Requests -->
+                </div>
+            </div>
+
+            <div class="space-y-3">
+                <label class="block text-xs font-semibold text-gray-300" data-i18n="addRepoLabel">افزودن مخزن جدید (نام کاربری/نام مخزن یا لینک کامل):</label>
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <div class="relative flex-1">
+                        <i data-lucide="plus-circle" class="w-5 h-5 absolute right-3 top-3 text-gray-400"></i>
+                        <!-- اضافه شدن لیسنر Keydown برای کلید Enter -->
+                        <input type="text" id="repoInput" onkeydown="handleRepoInputKey(event)" placeholder="مثال: facebook/react یا https://github.com/vuejs/vue" class="w-full bg-[#0d1117] border border-[#30363d] focus:border-blue-500 rounded-xl pr-10 pl-4 py-2.5 text-sm text-white focus:outline-none transition-all dir-ltr">
+                    </div>
+                    <button onclick="addRepository()" class="bg-blue-600 hover:bg-blue-500 text-white font-medium px-6 py-2.5 rounded-xl transition-all text-sm shrink-0 flex items-center justify-center gap-2">
+                        <i data-lucide="plus" class="w-4 h-4"></i>
+                        <span data-i18n="addRepoBtn">افزودن ریپو</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Import / Export Actions -->
+            <div class="flex flex-col sm:flex-row items-center gap-3 pt-3 border-t border-blue-500/20">
+                <button onclick="exportRepositories()" class="w-full sm:flex-1 bg-[#21262d] hover:bg-[#30363d] text-gray-200 px-4 py-2.5 rounded-xl border border-[#30363d] text-xs font-medium flex items-center justify-center gap-2 transition-all shadow-sm">
+                    <i data-lucide="download" class="w-4 h-4 text-blue-400"></i>
+                    <span data-i18n="exportBtn">پشتیبان‌گیری (Export JSON)</span>
+                </button>
+                <label class="w-full sm:flex-1 bg-[#21262d] hover:bg-[#30363d] text-gray-200 px-4 py-2.5 rounded-xl border border-[#30363d] text-xs font-medium flex items-center justify-center gap-2 transition-all shadow-sm cursor-pointer">
+                    <i data-lucide="upload" class="w-4 h-4 text-emerald-400"></i>
+                    <span data-i18n="importBtn">بازگردانی اطلاعات (Import JSON)</span>
+                    <input type="file" id="importFile" accept=".json" onchange="importRepositories(event)" class="hidden">
+                </label>
+            </div>
+            
+            <div class="flex items-center gap-2 pt-2">
+                <input type="password" id="ghTokenInput" name="random_gh_token_field" autocomplete="new-password" placeholder="توکن شخصیش‌سازی‌شده گیت‌هاب (اختیاری برای افزایش حد درخواست)" class="flex-1 bg-[#0d1117] border border-[#30363d] focus:border-blue-500 rounded-xl px-4 py-2 text-xs text-white focus:outline-none dir-ltr">
+                <button onclick="saveGitHubToken()" class="bg-[#21262d] hover:bg-[#30363d] text-gray-300 px-3 py-2 rounded-xl border border-[#30363d] text-xs font-medium shrink-0" data-i18n="saveTokenBtn">
+                    ذخیره توکن
+                </button>
+            </div>
+        </div>
+
+        <!-- Filter & Search Bar -->
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
+            <div class="relative w-full sm:w-80">
+                <i data-lucide="search" class="w-4 h-4 absolute right-3.5 top-3 text-gray-400"></i>
+                <input type="text" id="searchInput" oninput="renderRepositories()" placeholder="جستجو در ریپوزیتوری‌ها..." class="w-full bg-[#161b22] border border-[#30363d] focus:border-blue-500 rounded-xl pr-10 pl-4 py-2 text-sm text-white focus:outline-none transition-all">
+            </div>
+            
+            <div class="flex items-center gap-2 w-full sm:w-auto justify-end text-xs text-gray-400">
+                <span data-i18n="totalCount">تعداد کل:</span>
+                <span id="repoCount" class="font-bold text-white bg-[#21262d] px-2.5 py-1 rounded-lg border border-[#30363d]">0</span>
+            </div>
+        </div>
+
+        <!-- Repository Grid -->
+        <div id="repoGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            <!-- Dynamic Content -->
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="hidden flex-col items-center justify-center py-16 text-center space-y-4">
+            <div class="p-4 bg-[#161b22] rounded-full text-gray-500 border border-[#30363d]">
+                <i data-lucide="folder-open" class="w-10 h-10"></i>
+            </div>
+            <div class="space-y-1">
+                <h3 class="text-base font-semibold text-white" data-i18n="emptyTitle">هیچ ریپوزیتوری یافت نشد</h3>
+                <p class="text-xs text-gray-400" data-i18n="emptySub">از طریق پنل مدیریت پروژه‌های جدیدی را به لیست اضافه کنید.</p>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Modals -->
+    <div id="adminModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-[#161b22] border border-[#30363d] rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-5 relative">
+            <button onclick="closeAdminModal()" class="absolute top-4 left-4 text-gray-400 hover:text-white">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+            <div class="space-y-1 text-right">
+                <h3 id="adminModalTitle" class="text-lg font-bold text-white" data-i18n="adminModalTitle">ورود به پنل مدیریت</h3>
+                <p id="adminModalSub" class="text-xs text-gray-400" data-i18n="adminModalSub">جهت ویرایش و تنظیمات ریپوزیتوری‌ها رمز عبور را وارد کنید.</p>
+            </div>
+            <div class="space-y-3">
+                <!-- کلید Enter برای تایید فرم ورود ادمین -->
+                <input type="password" id="adminPasswordInput" onkeydown="handleAdminPassKey(event)" name="random_admin_vault_pass" autocomplete="new-password" placeholder="رمز عبور مدیریت..." class="w-full bg-[#0d1117] border border-[#30363d] focus:border-blue-500 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none">
+                <button onclick="submitAdminAuth()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium py-2.5 rounded-xl transition-all text-sm" data-i18n="loginBtn">
+                    تایید و ورود
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="requestModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-[#161b22] border border-[#30363d] rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-5 relative">
+            <button onclick="closeRequestModal()" class="absolute top-4 left-4 text-gray-400 hover:text-white">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+            <div class="space-y-1 text-right">
+                <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                    <i data-lucide="git-pull-request" class="w-5 h-5 text-emerald-400"></i>
+                    <span data-i18n="reqModalTitle">ارسال درخواست افزودن مخزن</span>
+                </h3>
+                <p class="text-xs text-gray-400" data-i18n="reqModalSub">نام یا لینک مخزن گیت‌هاب مورد نظر خود را وارد کنید تا ادمین بررسی و اضافه کند.</p>
+            </div>
+            <div class="space-y-3">
+                <input type="text" id="requestRepoInput" placeholder="مثال: owner/repo یا لینک گیت‌هاب" class="w-full bg-[#0d1117] border border-[#30363d] focus:border-emerald-500 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none dir-ltr">
+                <textarea id="requestDescInput" placeholder="توضیحات یا دلیل درخواست (اختیاری)..." class="w-full bg-[#0d1117] border border-[#30363d] focus:border-emerald-500 rounded-xl px-4 py-2 text-xs text-white focus:outline-none h-20 resize-none"></textarea>
+                <button onclick="submitRepoRequest()" class="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-medium py-2.5 rounded-xl transition-all text-sm shadow-md shadow-emerald-600/20" data-i18n="sendReqBtn">
+                    ارسال درخواست
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="messageModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-[#161b22] border border-[#30363d] rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-5 relative">
+            <button onclick="closeMessageModal()" class="absolute top-4 left-4 text-gray-400 hover:text-white">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+            <div class="space-y-1 text-right">
+                <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                    <i data-lucide="mail" class="w-5 h-5 text-indigo-400"></i>
+                    <span data-i18n="msgModalTitle">ارسال پیام یا بازخورد به ادمین</span>
+                </h3>
+                <p class="text-xs text-gray-400" data-i18n="msgModalSub">پست الکترونیکی خود را وارد کنید تا پاسخ ادمین را دریافت کنید.</p>
+            </div>
+            <div class="space-y-3">
+                <input type="email" id="userEmailInput" placeholder="ایمیل شما (example@domain.com)" class="w-full bg-[#0d1117] border border-[#30363d] focus:border-indigo-500 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none dir-ltr">
+                <textarea id="userMessageInput" placeholder="متن پیام خود را بنویسید..." class="w-full bg-[#0d1117] border border-[#30363d] focus:border-indigo-500 rounded-xl px-4 py-2 text-xs text-white focus:outline-none h-24 resize-none"></textarea>
+                <button onclick="submitUserMessage()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2.5 rounded-xl transition-all text-sm shadow-md shadow-indigo-600/20" data-i18n="sendMsgBtn">
+                    ارسال پیام
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="dbGuideModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-[#161b22] border border-[#30363d] rounded-2xl w-full max-w-2xl p-6 shadow-2xl space-y-4">
+            <div class="flex items-center justify-between border-b border-[#30363d] pb-3">
+                <h3 class="text-base font-bold text-white flex items-center gap-2">
+                    <i data-lucide="database" class="w-5 h-5 text-blue-400"></i>
+                    <span data-i18n="dbGuideTitle">راهنمای دیتابیس کلادفلر D1</span>
+                </h3>
+                <button onclick="closeDbGuideModal()" class="text-gray-400 hover:text-white">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div class="space-y-3 text-xs text-gray-300 leading-relaxed">
+                <p data-i18n="dbGuideDesc1">اطلاعات شما اکنون بدون هیچ محدودیت حافطه‌ای مستقیماً در Cloudflare D1 ذخیره می‌شوند.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="mt-auto border-t border-[#30363d] py-6 text-center text-xs text-gray-500">
+        <p class="font-sans flex items-center justify-center gap-1.5 flex-wrap">
+            <span>GitHub Release Tracker &copy; 2026</span>
+            <span class="text-gray-600">|</span>
+            <span class="text-blue-400 font-normal bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 rounded-md">Powered by MHYRshkri</span>
+        </p>
+    </footer>
+
+    <!-- Application Logic -->
+    <script>
+        const translations = {
+            fa: {
+                requestBtn: "درخواست افزودن ریپو",
+                messageBtn: "ارسال پیام",
+                adminBtn: "تنظیمات مدیریت",
+                adminPanelTitle: "پنل مدیریت اختصاصی",
+                dbGuideBtn: "راهنمای دیتابیس کلادفلر",
+                logoutBtn: "خروج از ادمین",
+                requestsListTitle: "درخواست‌های جدید افزودن ریپو",
+                messagesListTitle: "پیام‌ها و بازخوردهای دریافتی",
+                addRepoLabel: "افزودن مخزن جدید (نام کاربری/نام مخزن یا لینک کامل):",
+                addRepoBtn: "افزودن ریپو",
+                exportBtn: "پشتیبان‌گیری (Export JSON)",
+                importBtn: "بازگردانی اطلاعات (Import JSON)",
+                saveTokenBtn: "ذخیره توکن",
+                totalCount: "تعداد کل:",
+                emptyTitle: "هیچ ریپوزیتوری یافت نشد",
+                emptySub: "از طریق پنل مدیریت پروژه‌های جدیدی را به لیست اضافه کنید.",
+                adminModalTitle: "ورود به پنل مدیریت",
+                adminModalSub: "جهت ویرایش و تنظیمات ریپوزیتوری‌ها رمز عبور را وارد کنید.",
+                loginBtn: "تایید و ورود",
+                reqModalTitle: "ارسال درخواست افزودن مخزن",
+                reqModalSub: "نام یا لینک مخزن گیت‌هاب مورد نظر خود را وارد کنید تا ادمین بررسی و اضافه کند.",
+                sendReqBtn: "ارسال درخواست",
+                msgModalTitle: "ارسال پیام یا بازخورد به ادمین",
+                msgModalSub: "پست الکترونیکی خود را وارد کنید تا پاسخ ادمین را دریافت کنید.",
+                sendMsgBtn: "ارسال پیام",
+                dbGuideTitle: "راهنمای دیتابیس کلادفلر D1",
+                dbGuideDesc1: "اطلاعات شما اکنون بدون هیچ محدودیت حافطه‌ای مستقیماً در Cloudflare D1 ذخیره می‌شوند.",
+                searchPlaceholder: "جستجو در ریپوزیتوری‌ها...",
+                approveBtn: "تایید و افزودن",
+                rejectBtn: "رد",
+                deleteMsgBtn: "حذف پیام",
+                noReleases: "No releases available"
+            },
+            en: {
+                requestBtn: "Request Repo",
+                messageBtn: "Message",
+                adminBtn: "Admin Settings",
+                adminPanelTitle: "Admin Panel",
+                dbGuideBtn: "Cloudflare DB Guide",
+                logoutBtn: "Logout",
+                requestsListTitle: "New Repo Requests",
+                messagesListTitle: "Received Messages",
+                addRepoLabel: "Add new repository (owner/repo or full URL):",
+                addRepoBtn: "Add Repo",
+                exportBtn: "Backup (Export JSON)",
+                importBtn: "Restore (Import JSON)",
+                saveTokenBtn: "Save Token",
+                totalCount: "Total:",
+                emptyTitle: "No repositories found",
+                emptySub: "Add new projects to the list via the admin panel.",
+                adminModalTitle: "Admin Login",
+                adminModalSub: "Enter password for repository settings and editing.",
+                loginBtn: "Confirm & Login",
+                reqModalTitle: "Request to Add Repository",
+                reqModalSub: "Enter the GitHub repository name or link for admin review.",
+                sendReqBtn: "Send Request",
+                msgModalTitle: "Send Message to Admin",
+                msgModalSub: "Enter your email address to receive the admin's reply.",
+                sendMsgBtn: "Send Message",
+                dbGuideTitle: "Cloudflare D1 Guide",
+                dbGuideDesc1: "Your data is now safely stored on Cloudflare D1 without size limits.",
+                searchPlaceholder: "Search repositories...",
+                approveBtn: "Approve & Reject",
+                rejectBtn: "Reject",
+                deleteMsgBtn: "Delete",
+                noReleases: "No releases available"
+            },
+            de: {
+                requestBtn: "Repo anfragen",
+                messageBtn: "Nachricht",
+                adminBtn: "Admin-Einstellungen",
+                adminPanelTitle: "Admin-Panel",
+                dbGuideBtn: "Cloudflare DB Anleitung",
+                logoutBtn: "Abmelden",
+                requestsListTitle: "Neue Repo-Anfragen",
+                messagesListTitle: "Empfangene Nachrichten",
+                addRepoLabel: "Neues Repository hinzufügen (owner/repo oder URL):",
+                addRepoBtn: "Repo hinzufügen",
+                exportBtn: "Backup (Export JSON)",
+                importBtn: "Wiederherstellen (Import JSON)",
+                saveTokenBtn: "Token speichern",
+                totalCount: "Gesamt:",
+                emptyTitle: "Keine Repositories gefunden",
+                emptySub: "Fügen Sie über das Admin-Panel neue Projekte hinzu.",
+                adminModalTitle: "Admin-Anmeldung",
+                adminModalSub: "Passwort eingeben, um Einstellungen zu bearbeiten.",
+                loginBtn: "Bestätigen & Anmelden",
+                reqModalTitle: "Repository-Anfrage",
+                reqModalSub: "Geben Sie den Namen oder Link des GitHub-Repositories ein.",
+                sendReqBtn: "Anfrage senden",
+                msgModalTitle: "Nachricht an Admin senden",
+                msgModalSub: "Geben Sie Ihre E-Mail-Adresse für die Antwort ein.",
+                sendMsgBtn: "Nachricht senden",
+                dbGuideTitle: "Cloudflare D1 Anleitung",
+                dbGuideDesc1: "Ihre Daten werden sicher auf Cloudflare D1 gespeichert.",
+                searchPlaceholder: "Repositories durchsuchen...",
+                approveBtn: "Genehmigen",
+                rejectBtn: "Ablehnen",
+                deleteMsgBtn: "Löschen",
+                noReleases: "No releases available"
+            },
+            ru: {
+                requestBtn: "Запросить репо",
+                messageBtn: "Сообщение",
+                adminBtn: "Настройки админа",
+                adminPanelTitle: "Панель админа",
+                dbGuideBtn: "Гид по Cloudflare DB",
+                logoutBtn: "Выйти",
+                requestsListTitle: "Новые запросы репозиториев",
+                messagesListTitle: "Полученные сообщения",
+                addRepoLabel: "Добавить репозиторий (owner/repo или ссылка):",
+                addRepoBtn: "Добавить",
+                exportBtn: "Бэкап (Экспорт JSON)",
+                importBtn: "Восстановить (Импорт JSON)",
+                saveTokenBtn: "Сохранить токен",
+                totalCount: "Всего:",
+                emptyTitle: "Репозитории не найдены",
+                emptySub: "Добавьте новые проекты через панель администратора.",
+                adminModalTitle: "Вход администратора",
+                adminModalSub: "Введите пароль для редактирования настроек.",
+                loginBtn: "Войти",
+                reqModalTitle: "Запрос на добавление репозитория",
+                reqModalSub: "Введите имя или ссылку на репозиторий GitHub.",
+                sendReqBtn: "Отправить запрос",
+                msgModalTitle: "Отправить сообщение админу",
+                msgModalSub: "Введите ваш email для получения ответа.",
+                sendMsgBtn: "Отправить",
+                dbGuideTitle: "Руководство по Cloudflare D1",
+                dbGuideDesc1: "Ваши данные хранятся в Cloudflare D1 без ограничений по размеру.",
+                searchPlaceholder: "Поиск репозиториев...",
+                approveBtn: "Одобрить",
+                rejectBtn: "Отклонить",
+                deleteMsgBtn: "Удалить",
+                noReleases: "No releases available"
+            },
+            zh: {
+                requestBtn: "请求添加仓库",
+                messageBtn: "消息",
+                adminBtn: "管理设置",
+                adminPanelTitle: "管理面板",
+                dbGuideBtn: "Cloudflare DB 指南",
+                logoutBtn: "登出",
+                requestsListTitle: "新的仓库请求",
+                messagesListTitle: "收到的消息",
+                addRepoLabel: "添加新仓库 (owner/repo 或完整链接):",
+                addRepoBtn: "添加仓库",
+                exportBtn: "备份 (导出 JSON)",
+                importBtn: "恢复 (导入 JSON)",
+                saveTokenBtn: "保存令牌",
+                totalCount: "总计:",
+                emptyTitle: "未找到仓库",
+                emptySub: "通过管理面板将新项目添加到列表中。",
+                adminModalTitle: "管理员登录",
+                adminModalSub: "输入密码以进行仓库设置和编辑。",
+                loginBtn: "确认并登录",
+                reqModalTitle: "请求添加仓库",
+                reqModalSub: "输入 GitHub 仓库名称或链接以供管理员审核。",
+                sendReqBtn: "发送请求",
+                msgModalTitle: "发送消息给管理员",
+                msgModalSub: "输入您的电子邮件地址以接收管理员回复。",
+                sendMsgBtn: "发送消息",
+                dbGuideTitle: "Cloudflare D1 指南",
+                dbGuideDesc1: "您的数据现在安全地存储在 Cloudflare D1 上，不受大小限制。",
+                searchPlaceholder: "搜索仓库...",
+                approveBtn: "批准并添加",
+                rejectBtn: "拒绝",
+                deleteMsgBtn: "删除",
+                noReleases: "No releases available"
+            }
+        };
+
+        const langNames = {
+            fa: `<img src="https://flagcdn.com/w20/ir.png" class="w-3.5 h-2.5 object-cover rounded shadow-sm inline-block mx-1" alt="IR"> پارسی`,
+            en: `<img src="https://flagcdn.com/w20/gb.png" class="w-3.5 h-2.5 object-cover rounded shadow-sm inline-block mx-1" alt="UK"> UK English`,
+            de: `<img src="https://flagcdn.com/w20/de.png" class="w-3.5 h-2.5 object-cover rounded shadow-sm inline-block mx-1" alt="DE"> Deutsch`,
+            ru: `<img src="https://flagcdn.com/w20/ru.png" class="w-3.5 h-2.5 object-cover rounded shadow-sm inline-block mx-1" alt="RU"> Русский`,
+            zh: `<img src="https://flagcdn.com/w20/cn.png" class="w-3.5 h-2.5 object-cover rounded shadow-sm inline-block mx-1" alt="CN"> 中文`
+        };
+
+        let currentLang = localStorage.getItem('gh_tracker_lang') || 'fa';
+
+        function toggleLangDropdown() {
+            const menu = document.getElementById('langDropdownMenu');
+            const chevron = document.getElementById('langChevron');
+            const isHidden = menu.classList.contains('hidden');
+            
+            if (isHidden) {
+                menu.classList.remove('hidden');
+                chevron.style.transform = 'rotate(180deg)';
+            } else {
+                menu.classList.add('hidden');
+                chevron.style.transform = 'rotate(0deg)';
+            }
+        }
+
+        function selectCustomLang(lang) {
+            changeLanguage(lang);
+            const menu = document.getElementById('langDropdownMenu');
+            const chevron = document.getElementById('langChevron');
+            menu.classList.add('hidden');
+            chevron.style.transform = 'rotate(0deg)';
+        }
+
+        document.addEventListener('click', function(e) {
+            const btn = document.getElementById('langDropdownBtn');
+            const menu = document.getElementById('langDropdownMenu');
+            if (btn && menu && !btn.contains(e.target) && !menu.contains(e.target)) {
+                menu.classList.add('hidden');
+                const chevron = document.getElementById('langChevron');
+                if (chevron) chevron.style.transform = 'rotate(0deg)';
+            }
+        });
+
+        function changeLanguage(lang) {
+            currentLang = lang;
+            localStorage.setItem('gh_tracker_lang', lang);
+            
+            const label = document.getElementById('currentLangLabel');
+            if (label && langNames[lang]) {
+                label.innerHTML = langNames[lang];
+            }
+            
+            const body = document.getElementById('pageBody');
+            if (lang === 'fa') {
+                body.className = "min-h-screen flex flex-col justify-between dir-rtl relative";
+                body.style.fontFamily = "'Vazirmatn', sans-serif";
+            } else {
+                body.className = "min-h-screen flex flex-col justify-between dir-ltr relative";
+                body.style.fontFamily = "sans-serif";
+            }
+
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (translations[lang] && translations[lang][key]) {
+                    el.innerText = translations[lang][key];
+                }
+            });
+
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput && translations[lang]['searchPlaceholder']) {
+                searchInput.placeholder = translations[lang]['searchPlaceholder'];
+            }
+
+            renderRepositories();
+            if (window.isAdminLoggedIn) {
+                renderAdminRequests();
+                renderAdminMessages();
+            }
+        }
+
+        // --- کلید Enter برای اینپوت افزودن ریپو ---
+        function handleRepoInputKey(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addRepository();
+            }
+        }
+
+        // --- کلید Enter برای ورود ادمین ---
+        function handleAdminPassKey(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                submitAdminAuth();
+            }
+        }
+
+        async function fetchApi(key) {
+            try {
+                const res = await fetch(`/api?key=${key}&_t=${Date.now()}`, {
+                    cache: 'no-store'
+                });
+                if (!res.ok) return null;
+                return await res.json();
+            } catch (err) {
+                console.error("API Fetch Error:", err);
+                return null;
+            }
+        }
+
+        async function saveApi(key, value) {
+            try {
+                await fetch(`/api?_t=${Date.now()}`, {
+                    method: 'POST',
+                    cache: 'no-store',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ key, value })
+                });
+            } catch (err) {
+                showToast('خطا در ذخیره‌سازی اطلاعات در کلادفلر', 'error');
+            }
+        }
+
+        window.repositories = [];
+        window.repoRequests = [];
+        window.userMessages = [];
+        window.isAdminLoggedIn = false;
+        window.githubToken = localStorage.getItem('gh_tracker_token') || '';
+
+        window.onload = async () => {
+            changeLanguage(currentLang);
+            if (window.lucide) lucide.createIcons();
+            if (window.githubToken) {
+                const tokenInput = document.getElementById('ghTokenInput');
+                if (tokenInput) tokenInput.value = window.githubToken;
+            }
+            
+            await loadAllFromCloudflare();
+
+            setInterval(() => {
+                if (window.repositories && window.repositories.length > 0) {
+                    refreshAllReleasesSilent();
+                }
+            }, 15 * 60 * 1000);
+        };
+
+        async function loadAllFromCloudflare() {
+            const repos = await fetchApi('repositories');
+            if (repos && Array.isArray(repos)) {
+                window.repositories = repos;
+            } else {
+                window.repositories = [
+                    { name: 'vscode', owner: 'microsoft', fullName: 'microsoft/vscode', description: 'Visual Studio Code', avatarUrl: 'https://avatars.githubusercontent.com/u/6154722?v=4', htmlUrl: 'https://github.com/microsoft/vscode', latestRelease: null, preRelease: null, lastChecked: null }
+                ];
+                await saveToCloud();
+            }
+
+            const reqs = await fetchApi('requests');
+            window.repoRequests = Array.isArray(reqs) ? reqs : [];
+
+            const msgs = await fetchApi('messages');
+            window.userMessages = Array.isArray(msgs) ? msgs : [];
+
+            updateNotificationBadge();
+            renderRepositories();
+        }
+
+        function updateNotificationBadge() {
+            const badge = document.getElementById('totalBadge');
+            const reqCount = window.repoRequests.length;
+            const msgCount = window.userMessages.length;
+            const total = reqCount + msgCount;
+
+            if (total > 0) {
+                badge.innerText = total;
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+        }
+
+        async function saveToCloud() {
+            await saveApi('repositories', window.repositories);
+        }
+
+        function exportRepositories() {
+            if (!window.repositories || window.repositories.length === 0) {
+                showToast('No repositories to export', 'error');
+                return;
+            }
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(window.repositories, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", `github_trackers_backup_${new Date().toISOString().slice(0,10)}.json`);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+            showToast('Backup downloaded successfully', 'success');
+        }
+
+        function importRepositories(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    if (!Array.isArray(imported)) {
+                        showToast('Invalid backup file format', 'error');
+                        return;
+                    }
+                    let addedCount = 0;
+                    imported.forEach(repo => {
+                        if (repo.fullName && !window.repositories.some(r => r.fullName.toLowerCase() === repo.fullName.toLowerCase())) {
+                            window.repositories.push(repo);
+                            addedCount++;
+                        }
+                    });
+                    await saveToCloud();
+                    renderRepositories();
+                    showToast(`${addedCount} repositories added successfully`, 'success');
+                } catch (err) {
+                    showToast('Error reading JSON file', 'error');
+                }
+                event.target.value = '';
+            };
+            reader.readAsText(file);
+        }
+
+        function openRequestModal() {
+            document.getElementById('requestModal').classList.remove('hidden');
+        }
+        function closeRequestModal() {
+            document.getElementById('requestModal').classList.add('hidden');
+            document.getElementById('requestRepoInput').value = '';
+            document.getElementById('requestDescInput').value = '';
+        }
+
+        async function submitRepoRequest() {
+            const input = document.getElementById('requestRepoInput').value.trim();
+            const desc = document.getElementById('requestDescInput').value.trim();
+            if (!input) {
+                showToast('Please enter repository name or link', 'error');
+                return;
+            }
+
+            try {
+                showToast('Sending request...', 'info');
+                window.repoRequests.push({
+                    id: Date.now().toString(),
+                    repo: input,
+                    description: desc,
+                    date: new Date().toISOString()
+                });
+
+                await saveApi('requests', window.repoRequests);
+                updateNotificationBadge();
+                showToast('Request submitted successfully!', 'success');
+                closeRequestModal();
+            } catch (err) {
+                showToast('Error submitting request', 'error');
+            }
+        }
+
+        function openMessageModal() {
+            document.getElementById('messageModal').classList.remove('hidden');
+        }
+        function closeMessageModal() {
+            document.getElementById('messageModal').classList.add('hidden');
+            document.getElementById('userEmailInput').value = '';
+            document.getElementById('userMessageInput').value = '';
+        }
+
+        async function submitUserMessage() {
+            const email = document.getElementById('userEmailInput').value.trim();
+            const message = document.getElementById('userMessageInput').value.trim();
+            if (!email || !message) {
+                showToast('Please enter email and message', 'error');
+                return;
+            }
+
+            try {
+                showToast('Sending message...', 'info');
+                window.userMessages.push({
+                    id: Date.now().toString(),
+                    email: email,
+                    message: message,
+                    date: new Date().toISOString()
+                });
+
+                await saveApi('messages', window.userMessages);
+                updateNotificationBadge();
+                showToast('Message sent successfully.', 'success');
+                closeMessageModal();
+            } catch (err) {
+                showToast('Error sending message', 'error');
+            }
+        }
+
+        function renderAdminMessages() {
+            const section = document.getElementById('adminMessagesSection');
+            const listEl = document.getElementById('adminMessagesList');
+            document.getElementById('msgCountBadge').innerText = window.userMessages.length;
+
+            if (window.userMessages.length === 0) {
+                section.classList.add('hidden');
+                return;
+            }
+
+            section.classList.remove('hidden');
+            listEl.innerHTML = '';
+
+            const t = translations[currentLang];
+
+            window.userMessages.forEach((msg, index) => {
+                const dateStr = new Date(msg.date).toLocaleDateString('fa-IR', { hour: '2-digit', minute: '2-digit' });
+                const item = document.createElement('div');
+                item.className = 'bg-[#161b22] p-3 rounded-lg border border-[#30363d] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3';
+                item.innerHTML = `
+                    <div class="overflow-hidden space-y-1 dir-ltr text-left flex-1">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-bold text-indigo-300 font-mono">${msg.email}</span>
+                            <span class="text-[10px] text-gray-500">${dateStr}</span>
+                        </div>
+                        <p class="text-xs text-gray-300 whitespace-pre-wrap">${msg.message}</p>
+                    </div>
+                    <div class="flex items-center gap-2 shrink-0">
+                        <button onclick="deleteUserMessage(${index})" class="bg-red-600/80 hover:bg-red-500 text-white text-xs px-3 py-1.5 rounded-lg transition-all flex items-center gap-1">
+                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> ${t.deleteMsgBtn}
+                        </button>
+                    </div>
+                `;
+                listEl.appendChild(item);
+            });
+            if (window.lucide) lucide.createIcons();
+        }
+
+        async function deleteUserMessage(index) {
+            window.userMessages.splice(index, 1);
+            await saveApi('messages', window.userMessages);
+            updateNotificationBadge();
+            renderAdminMessages();
+            showToast('Message deleted', 'info');
+        }
+
+        function renderAdminRequests() {
+            const section = document.getElementById('adminRequestsSection');
+            const listEl = document.getElementById('adminRequestsList');
+            document.getElementById('reqCountBadge').innerText = window.repoRequests.length;
+
+            if (window.repoRequests.length === 0) {
+                section.classList.add('hidden');
+                return;
+            }
+
+            section.classList.remove('hidden');
+            listEl.innerHTML = '';
+
+            const t = translations[currentLang];
+
+            window.repoRequests.forEach((req, index) => {
+                const item = document.createElement('div');
+                item.className = 'bg-[#161b22] p-3 rounded-lg border border-[#30363d] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2';
+                item.innerHTML = `
+                    <div class="overflow-hidden dir-ltr text-left">
+                        <span class="text-xs font-bold text-white block">${req.repo}</span>
+                        ${req.description ? `<span class="text-[11px] text-gray-400 block">${req.description}</span>` : ''}
+                    </div>
+                    <div class="flex items-center gap-2 shrink-0">
+                        <button onclick="approveRequest(${index})" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-3 py-1.5 rounded-lg transition-all flex items-center gap-1">
+                            <i data-lucide="check" class="w-3.5 h-3.5"></i> ${t.approveBtn}
+                        </button>
+                        <button onclick="rejectRequest(${index})" class="bg-red-600 hover:bg-red-500 text-white text-xs px-3 py-1.5 rounded-lg transition-all flex items-center gap-1">
+                            <i data-lucide="x" class="w-3.5 h-3.5"></i> ${t.rejectBtn}
+                        </button>
+                    </div>
+                `;
+                listEl.appendChild(item);
+            });
+            if (window.lucide) lucide.createIcons();
+        }
+
+        async function approveRequest(index) {
+            const req = window.repoRequests[index];
+            if (!req) return;
+
+            let input = req.repo;
+            let fullName = '';
+            if (input.includes('github.com/')) {
+                const parts = input.split('github.com/')[1].split('/');
+                if (parts.length >= 2) fullName = `${parts[0]}/${parts[1]}`;
+            } else if (input.includes('/')) {
+                fullName = input;
+            }
+
+            if (!fullName) {
+                showToast('Invalid repository format', 'error');
+                return;
+            }
+
+            try {
+                const repoData = await fetchGitHub(`repos/${fullName}`);
+                const newRepo = {
+                    name: repoData.name,
+                    owner: repoData.owner.login,
+                    fullName: repoData.full_name,
+                    description: repoData.description,
+                    avatarUrl: repoData.owner.avatar_url,
+                    htmlUrl: repoData.html_url,
+                    latestRelease: null,
+                    preRelease: null,
+                    lastChecked: null
+                };
+
+                if (!window.repositories.some(r => r.fullName.toLowerCase() === fullName.toLowerCase())) {
+                    window.repositories.push(newRepo);
+                    await saveToCloud();
+                    await fetchReleaseForRepo(newRepo.fullName);
+                }
+
+                window.repoRequests.splice(index, 1);
+                await saveApi('requests', window.repoRequests);
+                updateNotificationBadge();
+                renderAdminRequests();
+                showToast('Repository approved and added', 'success');
+            } catch (err) {
+                showToast('Error fetching repo info from GitHub', 'error');
+            }
+        }
+
+        async function rejectRequest(index) {
+            window.repoRequests.splice(index, 1);
+            await saveApi('requests', window.repoRequests);
+            updateNotificationBadge();
+            renderAdminRequests();
+            showToast('Request rejected', 'info');
+        }
+
+        function renderRepositories() {
+            const grid = document.getElementById('repoGrid');
+            const emptyState = document.getElementById('emptyState');
+            const searchVal = document.getElementById('searchInput').value.toLowerCase().trim();
+
+            if (!grid) return;
+            grid.innerHTML = '';
+
+            const filtered = window.repositories.filter(r => 
+                r.name.toLowerCase().includes(searchVal) || 
+                r.owner.toLowerCase().includes(searchVal) || 
+                (r.description && r.description.toLowerCase().includes(searchVal))
+            );
+
+            document.getElementById('repoCount').innerText = filtered.length;
+            const t = translations[currentLang];
+
+            if (filtered.length === 0) {
+                grid.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+                emptyState.classList.add('flex');
+                return;
+            } else {
+                grid.classList.remove('hidden');
+                emptyState.classList.add('hidden');
+                emptyState.classList.remove('flex');
+            }
+
+            filtered.forEach(repo => {
+                const card = document.createElement('div');
+                card.className = 'glass-card p-4 rounded-xl flex flex-col justify-between space-y-3 relative group';
+
+                const rel = repo.latestRelease;
+                const preRel = repo.preRelease;
+
+                const relDateStr = rel ? new Date(rel.publishedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '';
+                const relTimeAgo = rel ? timeAgo(rel.publishedAt) : '';
+
+                const preRelDateStr = preRel ? new Date(preRel.publishedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '';
+                const preRelTimeAgo = preRel ? timeAgo(preRel.publishedAt) : '';
+
+                let releasesHtml = '';
+
+                if (!rel && !preRel) {
+                    releasesHtml = `<div class="text-xs text-gray-500 italic py-1">${t.noReleases}</div>`;
+                } else {
+                    releasesHtml = `
+                        <div class="space-y-2 pt-2 border-t border-[#30363d]/50 dir-ltr text-left">
+                            ${rel ? `
+                                <a href="${rel.htmlUrl}" target="_blank" class="block bg-gradient-to-r from-emerald-950/30 to-[#161b22]/90 hover:from-emerald-900/50 hover:to-[#161b22] p-3 rounded-xl border border-emerald-500/30 hover:border-emerald-500 hover:scale-[1.015] space-y-1.5 font-sans shadow-sm transition-all group/rel">
+                                    <div class="flex items-center justify-between gap-2">
+                                        <div class="flex items-center gap-1.5 overflow-hidden">
+                                            <span class="px-2.5 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 font-semibold border border-emerald-500/30 font-mono text-[11px] shrink-0">
+                                                Release
+                                            </span>
+                                            <span class="text-xs font-bold text-white font-mono truncate group-hover/rel:text-emerald-400 transition-all" title="${rel.tagName}">${rel.tagName}</span>
+                                        </div>
+                                        <div class="text-right shrink-0">
+                                            <span class="text-[10px] text-gray-400 font-mono block">${relDateStr}</span>
+                                            <span class="text-xs text-white font-bold font-mono block tracking-tight">${relTimeAgo}</span>
+                                        </div>
+                                    </div>
+                                    ${rel.name && rel.name.trim() !== rel.tagName.trim() ? `<div class="text-xs text-blue-400 truncate font-medium">${rel.name}</div>` : ''}
+                                </a>
+                            ` : ''}
+
+                            ${preRel ? `
+                                <a href="${preRel.htmlUrl}" target="_blank" class="block bg-gradient-to-r from-amber-950/30 to-[#161b22]/90 hover:from-amber-900/50 hover:to-[#161b22] p-3 rounded-xl border border-amber-500/30 hover:border-amber-500 hover:scale-[1.015] space-y-1.5 font-sans shadow-sm transition-all group/pre">
+                                    <div class="flex items-center justify-between gap-2">
+                                        <div class="flex items-center gap-1.5 overflow-hidden">
+                                            <span class="px-2.5 py-0.5 rounded-md bg-amber-500/20 text-amber-300 font-semibold border border-amber-500/30 font-mono text-[11px] shrink-0">
+                                                Pre-release
+                                            </span>
+                                            <span class="text-xs font-bold text-white font-mono truncate group-hover/pre:text-amber-400 transition-all" title="${preRel.tagName}">${preRel.tagName}</span>
+                                        </div>
+                                        <div class="text-right shrink-0">
+                                            <span class="text-[10px] text-gray-400 font-mono block">${preRelDateStr}</span>
+                                            <span class="text-xs text-white font-bold font-mono block tracking-tight">${preRelTimeAgo}</span>
+                                        </div>
+                                    </div>
+                                    ${preRel.name && preRel.name.trim() !== preRel.tagName.trim() ? `<div class="text-xs text-amber-300 truncate font-medium">${preRel.name}</div>` : ''}
+                                </a>
+                            ` : ''}
+                        </div>
+                    `;
+                }
+
+                const deleteBtnHtml = window.isAdminLoggedIn ? `
+                    <button onclick="deleteRepo('${repo.fullName}')" class="text-gray-400 hover:text-red-400 hover:bg-red-500/10 p-1.5 rounded-lg border border-transparent hover:border-red-500/20 transition-all shrink-0" title="Delete">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    </button>
+                ` : '';
+
+                card.innerHTML = `
+                    <div class="space-y-2">
+                        <div class="flex items-start justify-between gap-2">
+                            <div class="flex items-center gap-2.5">
+                                <img src="${repo.avatarUrl}" alt="${repo.owner}" class="w-8 h-8 rounded-full border border-[#30363d]">
+                                <div class="overflow-hidden dir-ltr text-left">
+                                    <a href="${repo.htmlUrl}" target="_blank" class="text-sm font-bold text-white hover:text-blue-400 truncate block">${repo.name}</a>
+                                    <span class="text-[11px] text-gray-400 truncate block">${repo.owner}</span>
+                                </div>
+                            </div>
+                            ${deleteBtnHtml}
+                        </div>
+                        <p class="text-xs text-gray-400 line-clamp-2 h-8" title="${repo.description || ''}">${repo.description || ''}</p>
+                    </div>
+
+                    ${releasesHtml}
+                `;
+
+                grid.appendChild(card);
+            });
+
+            if (window.lucide) {
+                lucide.createIcons();
+            }
+        }
+
+        async function fetchGitHub(endpoint) {
+            const headers = { 'Accept': 'application/vnd.github.v3+json' };
+            if (window.githubToken) {
+                headers['Authorization'] = `token ${window.githubToken}`;
+            }
+            const res = await fetch(`https://api.github.com/${endpoint}`, { headers });
+            if (!res.ok) throw new Error(`GitHub API Error: ${res.status}`);
+            return await res.json();
+        }
+
+        async function addRepository() {
+            const input = document.getElementById('repoInput').value.trim();
+            if (!input) {
+                showToast('Please enter repository name or link', 'error');
+                return;
+            }
+
+            let fullName = '';
+            if (input.includes('github.com/')) {
+                const parts = input.split('github.com/')[1].split('/');
+                if (parts.length >= 2) fullName = `${parts[0]}/${parts[1]}`;
+            } else if (input.includes('/')) {
+                fullName = input;
+            }
+
+            if (!fullName) {
+                showToast('Invalid repository format', 'error');
+                return;
+            }
+
+            if (window.repositories.some(r => r.fullName.toLowerCase() === fullName.toLowerCase())) {
+                showToast('Repository already added', 'error');
+                return;
+            }
+
+            try {
+                showToast('Fetching info from GitHub...', 'info');
+                const repoData = await fetchGitHub(`repos/${fullName}`);
+
+                const newRepo = {
+                    name: repoData.name,
+                    owner: repoData.owner.login,
+                    fullName: repoData.full_name,
+                    description: repoData.description,
+                    avatarUrl: repoData.owner.avatar_url,
+                    htmlUrl: repoData.html_url,
+                    latestRelease: null,
+                    preRelease: null,
+                    lastChecked: null
+                };
+
+                window.repositories.push(newRepo);
+                await saveToCloud();
+                document.getElementById('repoInput').value = '';
+                showToast('Repository added successfully', 'success');
+
+                await fetchReleaseForRepo(newRepo.fullName);
+            } catch (err) {
+                showToast('Repository not found on GitHub', 'error');
+            }
+        }
+
+        async function deleteRepo(fullName) {
+            if (!window.isAdminLoggedIn) return;
+            if (confirm(`Delete repository "${fullName}"?`)) {
+                window.repositories = window.repositories.filter(r => r.fullName.toLowerCase() !== fullName.toLowerCase());
+                await saveToCloud();
+                showToast('Repository deleted', 'success');
+            }
+        }
+
+        async function fetchReleaseForRepo(fullName) {
+            const idx = window.repositories.findIndex(r => r.fullName.toLowerCase() === fullName.toLowerCase());
+            if (idx === -1) return;
+
+            try {
+                const releases = await fetchGitHub(`repos/${fullName}/releases?per_page=10`);
+                
+                const latestStable = releases.find(r => !r.prerelease);
+                const latestPre = releases.find(r => r.prerelease);
+
+                window.repositories[idx].latestRelease = latestStable ? {
+                    tagName: latestStable.tag_name,
+                    name: latestStable.name || latestStable.tag_name,
+                    publishedAt: latestStable.published_at,
+                    htmlUrl: latestStable.html_url,
+                    body: latestStable.body || 'No release notes.'
+                } : null;
+
+                window.repositories[idx].preRelease = latestPre ? {
+                    tagName: latestPre.tag_name,
+                    name: latestPre.name || latestPre.tag_name,
+                    publishedAt: latestPre.published_at,
+                    htmlUrl: latestPre.html_url,
+                    body: latestPre.body || 'No release notes.'
+                } : null;
+
+            } catch (err) {
+                try {
+                    const release = await fetchGitHub(`repos/${fullName}/releases/latest`);
+                    window.repositories[idx].latestRelease = {
+                        tagName: release.tag_name,
+                        name: release.name || release.tag_name,
+                        publishedAt: release.published_at,
+                        htmlUrl: release.html_url,
+                        body: release.body || 'No release notes.'
+                    };
+                    window.repositories[idx].preRelease = null;
+                } catch (e) {
+                    window.repositories[idx].latestRelease = null;
+                    window.repositories[idx].preRelease = null;
+                }
+            }
+            window.repositories[idx].lastChecked = new Date().toISOString();
+            await saveToCloud();
+        }
+
+        async function refreshAllReleasesSilent() {
+            for (const repo of window.repositories) {
+                try {
+                    await fetchReleaseForRepo(repo.fullName);
+                } catch (e) {
+                    // Ignore silent errors during background intervals
+                }
+            }
+        }
+
+        async function openAdminModal() {
+            if (window.isAdminLoggedIn) {
+                document.getElementById('adminPanel').classList.remove('hidden');
+                renderAdminRequests();
+                renderAdminMessages();
+                return;
+            }
+
+            document.getElementById('adminModalTitle').innerText = translations[currentLang].adminModalTitle;
+            document.getElementById('adminModalSub').innerText = translations[currentLang].adminModalSub;
+            document.getElementById('adminModal').classList.remove('hidden');
+            setTimeout(() => {
+                document.getElementById('adminPasswordInput').focus();
+            }, 100);
+        }
+
+        function closeAdminModal() {
+            document.getElementById('adminModal').classList.add('hidden');
+            document.getElementById('adminPasswordInput').value = '';
+            document.activeElement.blur();
+        }
+
+        async function submitAdminAuth() {
+            const pwdInput = document.getElementById('adminPasswordInput');
+            const pwd = pwdInput.value.trim();
+            if (!pwd) {
+                showToast('Please enter password', 'error');
+                return;
+            }
+
+            const hash = btoa(pwd);
+            pwdInput.value = ''; // پاکسازی فوری ارزش ورودی پسورد جهت عدم نشتی
+            pwdInput.blur();
+            showToast('در حال بررسی...', 'info');
+
+            try {
+                const authData = await fetchApi('auth_vault');
+
+                if (!authData || !authData.passwordHash) {
+                    await saveApi('auth_vault', { passwordHash: hash });
+                    window.isAdminLoggedIn = true;
+                    showToast('Admin password set successfully', 'success');
+                    closeAdminModal();
+                    document.getElementById('adminPanel').classList.remove('hidden');
+                    renderAdminRequests();
+                    renderAdminMessages();
+                    renderRepositories();
+                } else {
+                    if (authData.passwordHash === hash) {
+                        window.isAdminLoggedIn = true;
+                        showToast('Logged in successfully', 'success');
+                        closeAdminModal();
+                        document.getElementById('adminPanel').classList.remove('hidden');
+                        renderAdminRequests();
+                        renderAdminMessages();
+                        renderRepositories();
+                    } else {
+                        showToast('Incorrect password', 'error');
+                    }
+                }
+            } catch (err) {
+                window.isAdminLoggedIn = true;
+                showToast('Logged in successfully', 'success');
+                closeAdminModal();
+                document.getElementById('adminPanel').classList.remove('hidden');
+                renderAdminRequests();
+                renderAdminMessages();
+                renderRepositories();
+            }
+        }
+
+        function logoutAdmin() {
+            window.isAdminLoggedIn = false;
+            document.getElementById('adminPanel').classList.add('hidden');
+            showToast('Logged out from admin', 'info');
+            renderRepositories();
+        }
+
+        function openDbGuideModal() {
+            document.getElementById('dbGuideModal').classList.remove('hidden');
+        }
+        function closeDbGuideModal() {
+            document.getElementById('dbGuideModal').classList.add('hidden');
+        }
+
+        function saveGitHubToken() {
+            const token = document.getElementById('ghTokenInput').value.trim();
+            window.githubToken = token;
+            localStorage.setItem('gh_tracker_token', token);
+            showToast('GitHub token saved', 'success');
+        }
+
+        function timeAgo(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const seconds = Math.floor((now - date) / 1000);
+
+            let interval = Math.floor(seconds / 31536000);
+            if (interval >= 1) return `${interval}y ago`;
+
+            interval = Math.floor(seconds / 2592000);
+            if (interval >= 1) return `${interval}mo ago`;
+
+            interval = Math.floor(seconds / 86400);
+            if (interval >= 1) return `${interval}d ago`;
+
+            interval = Math.floor(seconds / 3600);
+            if (interval >= 1) return `${interval}h ago`;
+
+            interval = Math.floor(seconds / 60);
+            if (interval >= 1) return `${interval}m ago`;
+
+            return 'just now';
+        }
+
+        function showToast(msg, type = 'info') {
+            const toast = document.getElementById('toast');
+            let bg = 'bg-[#161b22] border-blue-500 text-blue-400';
+            if (type === 'success') bg = 'bg-[#161b22] border-emerald-500 text-emerald-400';
+            if (type === 'error') bg = 'bg-[#161b22] border-red-500 text-red-400';
+
+            toast.className = `fixed top-5 left-5 z-50 transform transition-all duration-300 flex items-center gap-3 px-4 py-3 rounded-xl border shadow-xl text-sm font-medium ${bg}`;
+            toast.innerText = msg;
+            toast.classList.remove('-translate-y-20', 'opacity-0');
+
+            setTimeout(() => {
+                toast.classList.add('-translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
