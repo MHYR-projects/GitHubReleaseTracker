@@ -1,4 +1,4 @@
-name = "githubupdatetracker"
+name = 'githubreleasetracker'
 compatibility_date = "2026-01-01"
 
 [site]
