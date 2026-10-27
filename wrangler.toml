@@ -1,0 +1,10 @@
+name = "github-update-tracker"
+compatibility_date = "2026-01-01"
+
+[site]
+bucket = "."
+
+[[d1_databases]]
+binding = "DB"
+database_name = "gitdb"
+database_id = "37f24706-c3c7-49ce-bd74-5dd2ab9454c9"
