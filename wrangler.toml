@@ -1,0 +1,10 @@
+name = "github-update-tracker"
+compatibility_date = "2026-01-01"
+
+[site]
+bucket = "."
+
+[[d1_databases]]
+binding = "DB"
+database_name = "my-tracker-db"
+database_id = "شناسه_دیتابیس_D1_خود_را_اینجا_بگذارید"
