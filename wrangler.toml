@@ -7,4 +7,4 @@ bucket = "."
 [[d1_databases]]
 binding = "DB"
 database_name = "my-tracker-db"
-database_id = "شناسه_دیتابیس_D1_خود_را_اینجا_بگذارید"
+database_id = "1bbff639-5a49-4d8a-b1ef-811e03a4d66d"
