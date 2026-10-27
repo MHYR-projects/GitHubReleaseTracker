@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub Update Tracker</title>
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Vazirmatn Font -->
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
+    <style>
+        body {
+            font-family: 'Vazirmatn', sans-serif;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1f2937;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #374151;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #4b5563;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-100 min-h-screen flex flex-col justify-between">
+
+    <!-- Header / Navbar -->
+    <header class="bg-gray-800 border-b border-gray-700 shadow-lg sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-3 space-x-reverse">
+                <i class="fa-brands fa-github text-3xl text-indigo-400"></i>
+                <h1 class="text-xl font-bold tracking-wide">GitHub Update Tracker</h1>
+            </div>
+            
+            <div class="flex items-center space-x-3 space-x-reverse">
+                <!-- Status Badge -->
+                <span id="authStatusBadge" class="text-xs px-2.5 py-1 rounded-full bg-gray-700 text-gray-300 font-medium border border-gray-600">
+                    وضعیت: مهمان
+                </span>
+                
+                <!-- Admin Action Button -->
+                <button id="adminBtn" onclick="toggleAuthModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition flex items-center space-x-2 space-x-reverse shadow">
+                    <i class="fa-solid fa-lock text-xs"></i>
+                    <span id="adminBtnText">ورود ادمین</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow w-full">
+        <!-- Controls & Filters -->
+        <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-8 bg-gray-800 p-4 rounded-xl border border-gray-700 shadow-md">
+            <div class="relative w-full md:w-96">
+                <i class="fa-solid fa-magnifying-glass absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                <input type="text" id="searchInput" placeholder="جستجو در مخازن..." class="w-full bg-gray-900 border border-gray-700 rounded-lg pr-10 pl-4 py-2 text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:border-indigo-500 transition">
+            </div>
+            
+            <div class="flex items-center space-x-3 space-x-reverse w-full md:w-auto justify-end">
+                <button onclick="fetchRepositories()" class="bg-gray-700 hover:bg-gray-600 text-gray-200 px-3 py-2 rounded-lg text-sm font-medium transition flex items-center space-x-2 space-x-reverse">
+                    <i class="fa-solid fa-arrows-rotate"></i>
+                    <span>بروزرسانی لیست</span>
+                </button>
+                <button id="addRepoBtn" onclick="openAddModal()" class="hidden bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition flex items-center space-x-2 space-x-reverse shadow">
+                    <i class="fa-solid fa-plus"></i>
+                    <span>افزودن مخزن جدید</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Repository Grid -->
+        <div id="repoContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Loading Skeletons / Repositories will be injected here -->
+            <div class="text-center col-span-full py-12 text-gray-400">
+                <i class="fa-solid fa-circle-notch fa-spin text-3xl mb-3 text-indigo-500"></i>
+                <p>در حال دریافت اطلاعات مخازن...</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 border-t border-gray-700 py-4 text-center text-xs text-gray-400">
+        <p>GitHub Update Tracker &copy; 2026 - طراحی شده برای مدیریت آپدیت‌های ریپازیتوری</p>
+    </footer>
+
+    <!-- Auth Modal (Strict Admin Login & Setup) -->
+    <div id="authModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center hidden">
+        <div class="bg-gray-800 border border-gray-700 rounded-xl p-6 w-full max-w-md shadow-2xl relative">
+            <button onclick="toggleAuthModal()" class="absolute left-4 top-4 text-gray-400 hover:text-white">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+            
+            <div class="text-center mb-6">
+                <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-indigo-500/10 text-indigo-400 mb-3">
+                    <i class="fa-solid fa-user-shield text-xl"></i>
+                </div>
+                <h3 id="modalTitle" class="text-lg font-bold text-gray-100">ورود به پنل مدیریت</h3>
+                <p id="modalSubtitle" class="text-xs text-gray-400 mt-1">جهت دسترسی به تنظیمات ادمین، رمز عبور را وارد کنید.</p>
+            </div>
+
+            <!-- Prevent Form Autofill with dummy inputs -->
+            <form id="authForm" onsubmit="handleAuthSubmit(event)" autocomplete="off">
+                <input type="text" class="hidden" aria-hidden="true">
+                <input type="password" class="hidden" aria-hidden="true">
+
+                <div class="mb-4">
+                    <label for="adminPassword" class="block text-xs font-medium text-gray-300 mb-2">رمز عبور ادمین</label>
+                    <div class="relative">
+                        <input type="password" id="adminPassword" required autocomplete="new-password" placeholder="••••••••" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-sm text-gray-100 focus:outline-none focus:border-indigo-500 transition">
+                        <button type="button" onclick="togglePasswordVisibility()" class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-200">
+                            <i id="eyeIcon" class="fa-solid fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="authError" class="hidden mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-xs text-red-400 flex items-center space-x-2 space-x-reverse">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    <span id="authErrorText">رمز عبور نادرست است.</span>
+                </div>
+
+                <button type="submit" id="authSubmitBtn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 rounded-lg text-sm transition shadow-lg">
+                    تایید و ورود
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Repository Modal -->
+    <div id="addRepoModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center hidden">
+        <div class="bg-gray-800 border border-gray-700 rounded-xl p-6 w-full max-w-md shadow-2xl relative">
+            <button onclick="closeAddModal()" class="absolute left-4 top-4 text-gray-400 hover:text-white">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+            
+            <h3 class="text-lg font-bold text-gray-100 mb-4">افزودن مخزن جدید</h3>
+            
+            <form onsubmit="handleAddRepo(event)">
+                <div class="mb-4">
+                    <label class="block text-xs font-medium text-gray-300 mb-2">آدرس یا مسیر مخزن (Owner/Repo)</label>
+                    <input type="text" id="repoUrlInput" required placeholder="مثال: facebook/react" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-sm text-gray-100 focus:outline-none focus:border-indigo-500 transition">
+                </div>
+
+                <div class="flex justify-end space-x-3 space-x-reverse">
+                    <button type="button" onclick="closeAddModal()" class="bg-gray-700 hover:bg-gray-600 text-gray-300 px-4 py-2 rounded-lg text-sm font-medium transition">انصراف</button>
+                    <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition shadow">افزودن</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Application Script Logic -->
+    <script>
+        // Configuration & State Management
+        const WORKER_URL = "https://your-worker-subdomain.workers.dev"; // آدرس ورکر کلادفلر خود را قرار دهید
+        let currentAuthToken = localStorage.getItem('admin_token') || null;
+        let isPasswordConfigured = false;
+        let repositoriesList = [];
+
+        // App Initialization
+        document.addEventListener('DOMContentLoaded', async () => {
+            await checkAuthStatus();
+            await fetchRepositories();
+        });
+
+        // Check Backend Password Setup Status & Local Token
+        async function checkAuthStatus() {
+            try {
+                const res = await fetch(`${WORKER_URL}/api/auth/status`);
+                const data = await res.json();
+                isPasswordConfigured = data.isConfigured;
+
+                if (currentAuthToken) {
+                    // Verify if current token is valid
+                    const verifyRes = await fetch(`${WORKER_URL}/api/auth/verify`, {
+                        headers: { 'Authorization': `Bearer ${currentAuthToken}` }
+                    });
+                    if (verifyRes.ok) {
+                        setAdminState(true);
+                    } else {
+                        logoutAdmin();
+                    }
+                } else {
+                    setAdminState(false);
+                }
+            } catch (err) {
+                console.error("خطا در بررسی وضعیت احراز هویت:", err);
+                setAdminState(false);
+            }
+        }
+
+        // Toggle Admin Authentication Modal Display
+        function toggleAuthModal() {
+            const modal = document.getElementById('authModal');
+            const passInput = document.getElementById('adminPassword');
+            const errorBox = document.getElementById('authError');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalSubtitle = document.getElementById('modalSubtitle');
+            
+            errorBox.classList.add('hidden');
+            passInput.value = '';
+
+            if (currentAuthToken) {
+                // If logged in, button click triggers logout
+                logoutAdmin();
+                return;
+            }
+
+            if (isPasswordConfigured) {
+                modalTitle.innerText = "ورود به پنل مدیریت";
+                modalSubtitle.innerText = "جهت دسترسی به تنظیمات ادمین، رمز عبور را وارد کنید.";
+            } else {
+                modalTitle.innerText = "تعیین رمز عبور ادمین (بار اول)";
+                modalSubtitle.innerText = "رمز عبور جدیدی برای مدیریت سیستم تعیین کنید. این رمز ذخیره خواهد شد.";
+            }
+
+            modal.classList.toggle('hidden');
+            if (!modal.classList.contains('hidden')) {
+                setTimeout(() => passInput.focus(), 100);
+            }
+        }
+
+        // Strict Password Submit Handler (Authentication & First-time Registration)
+        async function handleAuthSubmit(e) {
+            e.preventDefault();
+            const password = document.getElementById('adminPassword').value;
+            const errorBox = document.getElementById('authError');
+            const errorText = document.getElementById('authErrorText');
+            const submitBtn = document.getElementById('authSubmitBtn');
+
+            if (!password) return;
+
+            submitBtn.disabled = true;
+            submitBtn.innerText = "در حال بررسی...";
+            errorBox.classList.add('hidden');
+
+            try {
+                const endpoint = isPasswordConfigured ? '/api/auth/login' : '/api/auth/setup';
+                const response = await fetch(`${WORKER_URL}${endpoint}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.token) {
+                    currentAuthToken = data.token;
+                    localStorage.setItem('admin_token', data.token);
+                    isPasswordConfigured = true;
+                    setAdminState(true);
+                    toggleAuthModal();
+                } else {
+                    throw new Error(data.message || 'رمز عبور اشتباه است.');
+                }
+            } catch (err) {
+                errorText.innerText = err.message || 'خطا در برقراری ارتباط با سرور.';
+                errorBox.classList.remove('hidden');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerText = "تایید و ورود";
+            }
+        }
+
+        // Set UI State according to Auth status
+        function setAdminState(isAdmin) {
+            const badge = document.getElementById('authStatusBadge');
+            const adminBtnText = document.getElementById('adminBtnText');
+            const addRepoBtn = document.getElementById('addRepoBtn');
+
+            if (isAdmin) {
+                badge.className = "text-xs px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-400 font-medium border border-emerald-500/30";
+                badge.innerText = "وضعیت: مدیر سیستم";
+                adminBtnText.innerText = "خروج از حساب";
+                addRepoBtn.classList.remove('hidden');
+            } else {
+                badge.className = "text-xs px-2.5 py-1 rounded-full bg-gray-700 text-gray-300 font-medium border border-gray-600";
+                badge.innerText = "وضعیت: مهمان";
+                adminBtnText.innerText = "ورود ادمین";
+                addRepoBtn.classList.add('hidden');
+            }
+            renderRepositories();
+        }
+
+        // Logout Admin
+        function logoutAdmin() {
+            currentAuthToken = null;
+            localStorage.removeItem('admin_token');
+            setAdminState(false);
+        }
+
+        // Toggle Password Input Visibility
+        function togglePasswordVisibility() {
+            const passInput = document.getElementById('adminPassword');
+            const eyeIcon = document.getElementById('eyeIcon');
+            if (passInput.type === 'password') {
+                passInput.type = 'text';
+                eyeIcon.classList.replace('fa-eye', 'fa-eye-slash');
+            } else {
+                passInput.type = 'password';
+                eyeIcon.classList.replace('fa-eye-slash', 'fa-eye');
+            }
+        }
+
+        // Fetch Repositories Data
+        async function fetchRepositories() {
+            const container = document.getElementById('repoContainer');
+            container.innerHTML = `
+                <div class="text-center col-span-full py-12 text-gray-400">
+                    <i class="fa-solid fa-circle-notch fa-spin text-3xl mb-3 text-indigo-500"></i>
+                    <p>در حال دریافت آخرین آپدیت‌ها...</p>
+                </div>`;
+            
+            try {
+                const res = await fetch(`${WORKER_URL}/api/repos`);
+                if (!res.ok) throw new Error();
+                repositoriesList = await res.json();
+                renderRepositories();
+            } catch (err) {
+                container.innerHTML = `
+                    <div class="text-center col-span-full py-12 text-red-400">
+                        <i class="fa-solid fa-circle-exclamation text-3xl mb-3"></i>
+                        <p>خطا در دریافت لیست مخازن. لطفا اتصال Worker را بررسی کنید.</p>
+                    </div>`;
+            }
+        }
+
+        // Render Repository List
+        function renderRepositories() {
+            const container = document.getElementById('repoContainer');
+            const searchVal = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = repositoriesList.filter(r => r.name.toLowerCase().includes(searchVal) || r.owner.toLowerCase().includes(searchVal));
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center col-span-full py-12 text-gray-500">
+                        <i class="fa-solid fa-folder-open text-3xl mb-3"></i>
+                        <p>هیچ مخزنی یافت نشد.</p>
+                    </div>`;
+                return;
+            }
+
+            container.innerHTML = filtered.map(repo => `
+                <div class="bg-gray-800 border border-gray-700 rounded-xl p-5 shadow-md hover:border-gray-600 transition flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-3">
+                            <a href="${repo.url}" target="_blank" class="font-bold text-indigo-400 hover:underline text-lg truncate">
+                                ${repo.owner}/${repo.name}
+                            </a>
+                            <span class="text-xs bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 px-2 py-0.5 rounded">
+                                ${repo.latestTag || 'بدون تگ'}
+                            </span>
+                        </div>
+                        <p class="text-xs text-gray-400 mb-4 line-clamp-2">${repo.description || 'بدون توضیحات'}</p>
+                    </div>
+
+                    <div class="border-t border-gray-700/60 pt-3 flex items-center justify-between text-xs text-gray-400">
+                        <span>آخرین آپدیت: ${repo.lastUpdated || 'نامشخص'}</span>
+                        ${currentAuthToken ? `
+                            <button onclick="deleteRepo('${repo.id}')" class="text-red-400 hover:text-red-300 p-1">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Add Repository
+        function openAddModal() { document.getElementById('addRepoModal').classList.remove('hidden'); }
+        function closeAddModal() { document.getElementById('addRepoModal').classList.add('hidden'); }
+
+        async function handleAddRepo(e) {
+            e.preventDefault();
+            const repoPath = document.getElementById('repoUrlInput').value.trim();
+            if (!repoPath) return;
+
+            try {
+                const res = await fetch(`${WORKER_URL}/api/repos`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${currentAuthToken}`
+                    },
+                    body: JSON.stringify({ repo: repoPath })
+                });
+
+                if (res.ok) {
+                    closeAddModal();
+                    document.getElementById('repoUrlInput').value = '';
+                    fetchRepositories();
+                } else {
+                    const data = await res.json();
+                    alert(data.message || 'خطا در افزودن مخزن.');
+                }
+            } catch (err) {
+                alert('خطا در ارتباط با سرور.');
+            }
+        }
+
+        // Delete Repository
+        async function deleteRepo(id) {
+            if (!confirm('آیا از حذف این مخزن اطمینان دارید؟')) return;
+
+            try {
+                const res = await fetch(`${WORKER_URL}/api/repos/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${currentAuthToken}` }
+                });
+
+                if (res.ok) {
+                    fetchRepositories();
+                } else {
+                    alert('خطا در حذف مخزن.');
+                }
+            } catch (err) {
+                alert('خطا در ارتباط با سرور.');
+            }
+        }
+
+        // Search Listener
+        document.getElementById('searchInput').addEventListener('input', renderRepositories);
+    </script>
+</body>
+</html>
